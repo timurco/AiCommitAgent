@@ -57,6 +57,10 @@ if [ ! -f "$CONFIG_DIR/config" ]; then
 # AI Commit Agent Configuration
 # Get your API key from: https://makersuite.google.com/app/apikey
 GEMINI_API_KEY=your_api_key_here
+
+# Gemini Model (optional, default: gemini-2.5-pro)
+# Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-1.5-pro, gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-pro
 EOF
     echo "📝 Created config file: $CONFIG_DIR/config"
     echo "   Please edit it and add your GEMINI_API_KEY"

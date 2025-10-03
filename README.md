@@ -31,6 +31,9 @@ Edit `.env` and add your Gemini API key:
 
 ```
 GEMINI_API_KEY=your_api_key_here
+
+# Optional: Choose Gemini model (default: gemini-2.5-pro)
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ### 3. Install Global Alias

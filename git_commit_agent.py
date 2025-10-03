@@ -18,6 +18,7 @@ load_dotenv()
 
 # Configuration
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-pro")
 
 
 class GitCommitAgent:
@@ -32,7 +33,7 @@ class GitCommitAgent:
         """
         self.repo_path = Path(repo_path)
         self.client = genai.Client(api_key=GEMINI_API_KEY)
-        self.model_name = "gemini-2.5-pro"
+        self.model_name = GEMINI_MODEL
 
         # Validate repository
         if not (self.repo_path / ".git").exists():
@@ -105,7 +106,7 @@ class GitCommitAgent:
         except subprocess.CalledProcessError as e:
             return {'error': str(e)}
 
-    def get_recent_commits(self, count: int = 5) -> dict:
+    def get_recent_commits(self, count: int = 2) -> dict:
         """
         Get recent commit messages for style reference
 
