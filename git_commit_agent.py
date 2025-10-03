@@ -188,12 +188,13 @@ class GitCommitAgent:
                 'output': e.stderr
             }
 
-    def process_commit(self, auto_confirm: bool = False) -> str:
+    def process_commit(self, auto_confirm: bool = False, user_message: str = None) -> str:
         """
         Process staged files and create commit using Gemini AI
 
         Args:
             auto_confirm: If True, skip confirmation prompt
+            user_message: Optional user-provided context/description
 
         Returns:
             Response message
@@ -262,12 +263,14 @@ Your task is to analyze staged changes and create structured, meaningful commit 
 3. List specific modifications
 4. Choose appropriate type and emoji
 5. Write clear, concise message
+6. If user provides context/description, use it to understand the intent better
 
 ## CRITICAL:
 - NEVER add "Generated with Claude Code" or similar AI attribution
 - Focus on WHAT changed and WHY
 - Be specific but concise
 - Use bullet points for details
+- If user provides context in their own language (e.g., Russian), understand it but write commit in ENGLISH
 """
 
         # Get git information (status already checked above)
@@ -275,7 +278,16 @@ Your task is to analyze staged changes and create structured, meaningful commit 
         recent = self.get_recent_commits()
 
         # Prepare context for Gemini
-        context = f"""## Staged Files ({len(status['staged'])}):
+        context_parts = []
+
+        if user_message:
+            context_parts.append(f"""## User's Context/Description:
+{user_message}
+
+IMPORTANT: The user provided this context to help you understand their intent. Use it to write a better commit message, but the final message must be in ENGLISH following the conventional commits format.
+""")
+
+        context_parts.append(f"""## Staged Files ({len(status['staged'])}):
 {json.dumps(status['staged'], indent=2)}
 
 ## Diff:
@@ -284,7 +296,9 @@ Your task is to analyze staged changes and create structured, meaningful commit 
 ## Recent Commits (for style reference):
 {json.dumps(recent.get('commits', []), indent=2)}
 
-Based on this information, generate a commit message following the rules."""
+Based on this information, generate a commit message following the rules.""")
+
+        context = "\n".join(context_parts)
 
         print("\n🤖 Analyzing changes with Gemini AI...")
 
@@ -359,16 +373,30 @@ def main():
     # Parse arguments
     auto_confirm = False
     repo_path = "."
+    user_message = None
+    i = 1
 
-    for arg in sys.argv[1:]:
+    while i < len(sys.argv):
+        arg = sys.argv[i]
+
         if arg in ['-y', '--yes']:
             auto_confirm = True
+        elif arg in ['-m', '--message']:
+            # Next argument is the message
+            if i + 1 < len(sys.argv):
+                user_message = sys.argv[i + 1]
+                i += 1  # Skip next arg
+            else:
+                print("❌ Error: -m requires a message argument")
+                sys.exit(1)
         elif not arg.startswith('-'):
             repo_path = arg
 
+        i += 1
+
     try:
         agent = GitCommitAgent(repo_path)
-        result = agent.process_commit(auto_confirm=auto_confirm)
+        result = agent.process_commit(auto_confirm=auto_confirm, user_message=user_message)
         print(f"\n{result}")
     except Exception as e:
         print(f"❌ Error: {str(e)}")

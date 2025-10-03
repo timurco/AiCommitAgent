@@ -10,6 +10,7 @@ AI-powered git commit assistant using Google Gemini API. Analyzes your staged ch
 - 📚 Learns from your recent commits
 - ✅ Interactive confirmation before committing
 - ⚡ Auto-commit mode with `-y` flag
+- 💬 Add context with `-m` flag (supports any language)
 - ⚙️ Easy config management with `aicommit config`
 - 🎯 Smart: only calls AI if there are staged files
 
@@ -71,11 +72,15 @@ aicommit
 # Auto-commit mode (no confirmation)
 aicommit -y
 
+# Provide context/description for better commit message
+aicommit -m "Added bunch of books and fixed headers"
+aicommit -m "Добавил кучу книг, и исправил там заголовки"
+
+# Combine flags
+aicommit -y -m "Quick fix for typos"
+
 # Specify repository path
 aicommit /path/to/repo
-
-# Auto-commit in specific repo
-aicommit -y /path/to/repo
 
 # Open config in vim
 aicommit config
