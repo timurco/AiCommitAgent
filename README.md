@@ -8,8 +8,7 @@ AI-powered git commit assistant using Google Gemini API. Analyzes your staged ch
 
 ## 🎬 Demo
 
-<video src="assets/aicommit-example.mp4" controls loop></video>
-
+https://github.com/user-attachments/assets/845ad9d9-42e9-42ac-a364-69cd411af4ca
 
 ## Features
 
