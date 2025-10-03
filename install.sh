@@ -6,7 +6,7 @@ set -e
 
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-AGENT_SCRIPT="$SCRIPT_DIR/git_commit_agent.py"
+AGENT_SCRIPT="$SCRIPT_DIR/aicommit.py"
 
 echo "🤖 Installing AI Commit Agent..."
 
