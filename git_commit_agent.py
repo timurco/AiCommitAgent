@@ -39,6 +39,26 @@ class GitCommitAgent:
         if not (self.repo_path / ".git").exists():
             raise ValueError(f"Not a git repository: {repo_path}")
 
+    def has_staged_files(self) -> bool:
+        """
+        Check if there are any staged files
+
+        Returns:
+            True if there are staged files, False otherwise
+        """
+        try:
+            # Use git diff --cached --quiet - exits with 1 if there are differences
+            result = subprocess.run(
+                ["git", "diff", "--cached", "--quiet"],
+                cwd=self.repo_path,
+                capture_output=True
+            )
+            # Exit code 0 = no differences (nothing staged)
+            # Exit code 1 = there are differences (files staged)
+            return result.returncode == 1
+        except subprocess.CalledProcessError:
+            return False
+
     def get_git_status(self) -> dict:
         """
         Get current git status
@@ -46,7 +66,6 @@ class GitCommitAgent:
         Returns:
             Dict with status information
         """
-        print("📊 Checking git status...")
         try:
             result = subprocess.run(
                 ["git", "status", "--porcelain"],
@@ -67,10 +86,13 @@ class GitCommitAgent:
                 status = line[:2]
                 filepath = line[3:]
 
-                if status[0] in ['M', 'A', 'D', 'R', 'C']:
+                # First character = staged area status
+                if status[0] in ['M', 'A', 'D', 'R', 'C'] and status[0] != ' ':
                     staged.append({'status': status[0], 'file': filepath})
-                if status[1] in ['M', 'D']:
+                # Second character = working tree status
+                if status[1] in ['M', 'D'] and status[1] != ' ':
                     unstaged.append({'status': status[1], 'file': filepath})
+                # Untracked files
                 if status == '??':
                     untracked.append(filepath)
 
@@ -166,13 +188,26 @@ class GitCommitAgent:
                 'output': e.stderr
             }
 
-    def process_commit(self) -> str:
+    def process_commit(self, auto_confirm: bool = False) -> str:
         """
         Process staged files and create commit using Gemini AI
+
+        Args:
+            auto_confirm: If True, skip confirmation prompt
 
         Returns:
             Response message
         """
+
+        # Early check for staged files - don't call AI if nothing to commit
+        print("📊 Checking for staged files...")
+        if not self.has_staged_files():
+            return "⚠️  No staged files to commit"
+
+        # Get detailed status
+        status = self.get_git_status()
+        if 'error' in status:
+            return f"❌ Error getting git status: {status['error']}"
 
         system_instruction = """You are a Git commit message expert assistant.
 
@@ -235,16 +270,9 @@ Your task is to analyze staged changes and create structured, meaningful commit 
 - Use bullet points for details
 """
 
-        # Get git information
-        status = self.get_git_status()
+        # Get git information (status already checked above)
         diff = self.get_staged_diff()
         recent = self.get_recent_commits()
-
-        if 'error' in status:
-            return f"❌ Error getting git status: {status['error']}"
-
-        if not status['staged']:
-            return "⚠️  No staged files to commit"
 
         # Prepare context for Gemini
         context = f"""## Staged Files ({len(status['staged'])}):
@@ -282,33 +310,65 @@ Based on this information, generate a commit message following the rules."""
             print(commit_message)
             print("-" * 60)
 
-            # Ask for confirmation
-            print("\n❓ Create this commit? (y/n): ", end='')
-            confirmation = input().strip().lower()
+            # Ask for confirmation unless auto-confirm is enabled
+            if not auto_confirm:
+                print("\n❓ Create this commit? (y/n): ", end='')
+                confirmation = input().strip().lower()
+                if confirmation != 'y':
+                    return "❌ Commit cancelled by user"
 
-            if confirmation == 'y':
-                result = self.create_commit(commit_message)
-                if result.get('success'):
-                    return f"✅ Commit created successfully!\n{result['output']}"
-                else:
-                    return f"❌ Failed to create commit:\n{result.get('error')}\n{result.get('output')}"
+            result = self.create_commit(commit_message)
+            if result.get('success'):
+                return f"✅ Commit created successfully!\n{result['output']}"
             else:
-                return "❌ Commit cancelled by user"
+                return f"❌ Failed to create commit:\n{result.get('error')}\n{result.get('output')}"
 
         except Exception as e:
             return f"❌ Error generating commit message: {str(e)}"
+
+
+def open_config():
+    """Open config file in vim"""
+    config_file = Path.home() / ".config" / "aicommit" / "config"
+
+    if not config_file.exists():
+        print("⚠️  Config file not found. Creating...")
+        config_file.parent.mkdir(parents=True, exist_ok=True)
+        config_file.write_text("""# AI Commit Agent Configuration
+# Get your API key from: https://makersuite.google.com/app/apikey
+GEMINI_API_KEY=your_api_key_here
+
+# Gemini Model (optional, default: gemini-2.5-pro)
+# Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-1.5-pro, gemini-1.5-flash
+GEMINI_MODEL=gemini-2.5-pro
+""")
+
+    # Open in vim
+    subprocess.run(["vim", str(config_file)])
 
 
 def main():
     """Main entry point"""
     import sys
 
-    # Get repo path from command line or use current directory
-    repo_path = sys.argv[1] if len(sys.argv) > 1 else "."
+    # Handle 'config' subcommand
+    if len(sys.argv) > 1 and sys.argv[1] == "config":
+        open_config()
+        return
+
+    # Parse arguments
+    auto_confirm = False
+    repo_path = "."
+
+    for arg in sys.argv[1:]:
+        if arg in ['-y', '--yes']:
+            auto_confirm = True
+        elif not arg.startswith('-'):
+            repo_path = arg
 
     try:
         agent = GitCommitAgent(repo_path)
-        result = agent.process_commit()
+        result = agent.process_commit(auto_confirm=auto_confirm)
         print(f"\n{result}")
     except Exception as e:
         print(f"❌ Error: {str(e)}")

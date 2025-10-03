@@ -9,6 +9,9 @@ AI-powered git commit assistant using Google Gemini API. Analyzes your staged ch
 - 📝 Follows conventional commits format with emojis
 - 📚 Learns from your recent commits
 - ✅ Interactive confirmation before committing
+- ⚡ Auto-commit mode with `-y` flag
+- ⚙️ Easy config management with `aicommit config`
+- 🎯 Smart: only calls AI if there are staged files
 
 ## Installation
 
@@ -62,11 +65,20 @@ source ~/.config/fish/config.fish
 After installation, use anywhere:
 
 ```bash
-# In any git repository
+# Interactive mode (asks for confirmation)
 aicommit
 
-# Or specify a repository path
+# Auto-commit mode (no confirmation)
+aicommit -y
+
+# Specify repository path
 aicommit /path/to/repo
+
+# Auto-commit in specific repo
+aicommit -y /path/to/repo
+
+# Open config in vim
+aicommit config
 ```
 
 ### Direct Python
@@ -119,12 +131,12 @@ The agent follows this structure:
 
 ## How It Works
 
-1. Checks your staged files (`git status --porcelain`)
+1. Checks if there are staged files (exits early if none)
 2. Gets the diff (`git diff --cached`)
 3. Analyzes recent commits for style reference
-4. Sends context to Gemini AI
+4. Sends context to Gemini AI only if there are changes
 5. Generates commit message following the rules
-6. Shows preview and asks for confirmation
+6. Shows preview and asks for confirmation (unless `-y` flag)
 7. Creates the commit
 
 ## Requirements
@@ -142,7 +154,7 @@ Make sure you're in a git repository or provide a valid path.
 Stage your changes first with `git add`.
 
 ### API key not found
-Make sure `.env` file exists and contains `GEMINI_API_KEY`.
+Make sure global config exists: `aicommit config` and add your `GEMINI_API_KEY`.
 
 ## License
 
