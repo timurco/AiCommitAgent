@@ -16,6 +16,16 @@ if [ ! -f "$AGENT_SCRIPT" ]; then
     exit 1
 fi
 
+# Install Python dependencies
+echo "📦 Installing Python dependencies..."
+if [ -f "$SCRIPT_DIR/requirements.txt" ]; then
+    pip3 install -q -r "$SCRIPT_DIR/requirements.txt"
+    echo "✅ Dependencies installed"
+else
+    echo "⚠️  requirements.txt not found, installing manually..."
+    pip3 install -q google-genai python-dotenv
+fi
+
 # Make script executable
 chmod +x "$AGENT_SCRIPT"
 
@@ -63,7 +73,7 @@ GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-2.5-pro
 EOF
     echo "📝 Created config file: $CONFIG_DIR/config"
-    echo "   Please edit it and add your GEMINI_API_KEY"
+    echo "   Please edit it (\`aicommit config\`) and add your GEMINI_API_KEY"
 fi
 
 # Detect shell and update PATH if needed
@@ -86,9 +96,10 @@ case "$SHELL_NAME" in
         ;;
 esac
 
-# Check if ~/.local/bin is in PATH
-if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' "$SHELL_RC" 2>/dev/null &&
-   ! grep -q 'export PATH=$HOME/.local/bin:$PATH' "$SHELL_RC" 2>/dev/null; then
+# Check if ~/.local/bin is already in PATH configuration
+if grep -q '\.local/bin' "$SHELL_RC" 2>/dev/null; then
+    echo "✅ ~/.local/bin already in PATH in $SHELL_RC"
+else
     echo "" >> "$SHELL_RC"
     echo "# Add ~/.local/bin to PATH" >> "$SHELL_RC"
     if [ "$SHELL_NAME" = "fish" ]; then
@@ -107,7 +118,7 @@ echo "⚙️  Config file: $CONFIG_DIR/config"
 echo ""
 echo "Next steps:"
 echo "1. Edit config file and add your GEMINI_API_KEY:"
-echo "   nano $CONFIG_DIR/config"
+echo "   aicommit config"
 echo ""
 echo "2. Reload your shell:"
 echo "   source $SHELL_RC"

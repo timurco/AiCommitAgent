@@ -1,6 +1,15 @@
 # AI Commit Agent 🤖
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Gemini API](https://img.shields.io/badge/Gemini-2.5-orange.svg)](https://ai.google.dev/)
+
 AI-powered git commit assistant using Google Gemini API. Analyzes your staged changes and generates structured, meaningful commit messages following conventional commits with emojis.
+
+## 🎬 Demo
+
+<video src="assets/aicommit-example.mp4" controls loop></video>
+
 
 ## Features
 
@@ -16,47 +25,39 @@ AI-powered git commit assistant using Google Gemini API. Analyzes your staged ch
 
 ## Installation
 
-### 1. Install Dependencies
-
 ```bash
-cd /Users/timurko/Code/_bots/02_AiCommitAgent
-pip install -r requirements.txt
-```
+# Clone the repository
+git clone https://github.com/timurco/AiCommitAgent.git
+cd AiCommitAgent
 
-### 2. Set Up API Key
-
-Create `.env` file:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` and add your Gemini API key:
-
-```
-GEMINI_API_KEY=your_api_key_here
-
-# Optional: Choose Gemini model (default: gemini-2.5-pro)
-GEMINI_MODEL=gemini-2.5-flash
-```
-
-### 3. Install Global Alias
-
-```bash
+# Run installation script (installs dependencies and sets up global command)
 ./install.sh
 ```
+
+The script will:
+- Install Python dependencies globally
+- Create `aicommit` command in `~/.local/bin`
+- Generate config file at `~/.config/aicommit/config`
 
 Then reload your shell:
 
 ```bash
-# For zsh
-source ~/.zshrc
+source ~/.zshrc  # or ~/.bashrc for bash, or ~/.config/fish/config.fish for fish
+```
 
-# For bash
-source ~/.bashrc
+Configure your API key:
 
-# For fish
-source ~/.config/fish/config.fish
+```bash
+aicommit config
+```
+
+Add your Gemini API key and preferred model:
+
+```env
+GEMINI_API_KEY=your_api_key_here
+
+# Optional: Choose Gemini model (default: gemini-2.5-pro)
+GEMINI_MODEL=gemini-2.5-flash
 ```
 
 ## Usage
@@ -84,13 +85,6 @@ aicommit /path/to/repo
 
 # Open config in vim
 aicommit config
-```
-
-### Direct Python
-
-```bash
-python git_commit_agent.py
-python git_commit_agent.py /path/to/repo
 ```
 
 ## Commit Message Format
@@ -161,6 +155,16 @@ Stage your changes first with `git add`.
 ### API key not found
 Make sure global config exists: `aicommit config` and add your `GEMINI_API_KEY`.
 
-## License
+## 📄 License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🔗 Links
+
+- **Repository**: [github.com/timurco/AiCommitAgent](https://github.com/timurco/AiCommitAgent)
+- **Issues**: [github.com/timurco/AiCommitAgent/issues](https://github.com/timurco/AiCommitAgent/issues)
+- **Gemini API**: [aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)
+
+## 🤝 Contributing
+
+Contributions are welcome! Feel free to open an issue or submit a pull request.
