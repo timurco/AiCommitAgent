@@ -344,6 +344,15 @@ Based on this information, generate a commit message following the rules.""")
                 lines = commit_message.split('\n')
                 commit_message = '\n'.join(lines[1:-1])
 
+            # Remove <<MSG ... MSG>> wrapper if present (Windows-specific Gemini API artifact)
+            if commit_message.startswith('<<MSG'):
+                # Remove opening <<MSG and closing MSG or MSG>>
+                commit_message = commit_message[5:].strip()  # Remove <<MSG from start
+                if commit_message.endswith('MSG>>'):
+                    commit_message = commit_message[:-5].strip()
+                elif commit_message.endswith('MSG'):
+                    commit_message = commit_message[:-3].strip()
+
             print("\n📝 Generated commit message:")
             print("-" * 60)
             print(commit_message)
