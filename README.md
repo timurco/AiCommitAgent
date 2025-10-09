@@ -21,8 +21,11 @@ https://github.com/user-attachments/assets/845ad9d9-42e9-42ac-a364-69cd411af4ca
 - 💬 Add context with `-m` flag (supports any language)
 - ⚙️ Easy config management with `aicommit config`
 - 🎯 Smart: only calls AI if there are staged files
+- 🖥️ Cross-platform: Windows, macOS, Linux
 
 ## Installation
+
+### macOS / Linux
 
 ```bash
 # Clone the repository
@@ -43,6 +46,30 @@ Then reload your shell:
 ```bash
 source ~/.zshrc  # or ~/.bashrc for bash, or ~/.config/fish/config.fish for fish
 ```
+
+### Windows
+
+```cmd
+# Clone the repository
+git clone https://github.com/timurco/AiCommitAgent.git
+cd AiCommitAgent
+
+# Run installation script (installs dependencies and sets up global command)
+install.bat
+```
+
+The script will:
+- Install Python dependencies globally
+- Create `aicommit.bat` command in `%USERPROFILE%\.local\bin`
+- Generate config file at `%USERPROFILE%\.config\aicommit\config`
+
+Then add `%USERPROFILE%\.local\bin` to your PATH:
+1. Press Win+X and select "System"
+2. Click "Advanced system settings"
+3. Click "Environment Variables"
+4. Under "User variables", select "Path" and click "Edit"
+5. Click "New" and add: `C:\Users\YourUsername\.local\bin`
+6. Click OK and restart your terminal
 
 Configure your API key:
 
@@ -80,9 +107,10 @@ aicommit -m "Добавил кучу книг, и исправил там заг
 aicommit -y -m "Quick fix for typos"
 
 # Specify repository path
-aicommit /path/to/repo
+aicommit /path/to/repo              # macOS/Linux
+aicommit C:\path\to\repo            # Windows
 
-# Open config in vim
+# Open config in editor (vim on macOS/Linux, notepad on Windows)
 aicommit config
 ```
 
@@ -142,6 +170,7 @@ The agent follows this structure:
 - Python 3.7+
 - Git repository
 - Google Gemini API key
+- Platform: Windows, macOS, or Linux
 
 ## Troubleshooting
 

@@ -5,6 +5,7 @@ Analyzes staged files and creates structured commit messages
 """
 
 import os
+import sys
 import subprocess
 import json
 from pathlib import Path
@@ -12,6 +13,16 @@ from typing import Dict, List, Any, Optional
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
+
+# Fix Windows console encoding for emoji support
+if sys.platform == 'win32':
+    try:
+        # Set console to UTF-8 mode
+        import codecs
+        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    except Exception:
+        pass  # Fallback to default encoding if UTF-8 setup fails
 
 # Load environment variables from .env file
 load_dotenv()
@@ -342,7 +353,9 @@ Based on this information, generate a commit message following the rules.""")
 
 
 def open_config():
-    """Open config file in vim"""
+    """Open config file in platform-specific editor"""
+    import platform
+
     config_file = Path.home() / ".config" / "aicommit" / "config"
 
     if not config_file.exists():
@@ -357,14 +370,17 @@ GEMINI_API_KEY=your_api_key_here
 GEMINI_MODEL=gemini-2.5-pro
 """)
 
-    # Open in vim
-    subprocess.run(["vim", str(config_file)])
+    # Open in platform-specific editor
+    if platform.system() == "Windows":
+        # Use notepad on Windows
+        subprocess.run(["notepad", str(config_file)])
+    else:
+        # Use vim on macOS/Linux
+        subprocess.run(["vim", str(config_file)])
 
 
 def main():
     """Main entry point"""
-    import sys
-
     # Handle 'config' subcommand
     if len(sys.argv) > 1 and sys.argv[1] == "config":
         open_config()
