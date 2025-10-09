@@ -27,6 +27,12 @@ if sys.platform == 'win32':
 # Load environment variables from .env file
 load_dotenv()
 
+# Also load from global config if not set in environment
+if not os.environ.get("GEMINI_API_KEY"):
+    config_file = Path.home() / ".config" / "aicommit" / "config"
+    if config_file.exists():
+        load_dotenv(config_file)
+
 # Configuration
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-pro")
@@ -83,6 +89,8 @@ class GitCommitAgent:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
+                errors='replace',
                 check=True
             )
 
@@ -129,6 +137,8 @@ class GitCommitAgent:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
+                errors='replace',
                 check=True
             )
 
@@ -156,6 +166,8 @@ class GitCommitAgent:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
+                errors='replace',
                 check=True
             )
 
@@ -185,6 +197,8 @@ class GitCommitAgent:
                 cwd=self.repo_path,
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
+                errors='replace',
                 check=True
             )
 
