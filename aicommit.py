@@ -6,6 +6,7 @@ Analyzes staged files and creates structured commit messages
 
 import os
 import sys
+import re
 import subprocess
 import json
 from pathlib import Path
@@ -290,7 +291,11 @@ Your task is to analyze staged changes and create structured, meaningful commit 
 5. Write clear, concise message
 6. If user provides context/description, use it to understand the intent better
 
-## CRITICAL:
+## CRITICAL OUTPUT FORMATTING:
+- Return ONLY the commit message text, nothing else
+- DO NOT wrap the message in any tags like <<MSG>>, <<COMMIT_MSG>>, or similar markers
+- DO NOT add any prefixes or suffixes to the message
+- The output should be ready to use directly as a git commit message
 - NEVER add "Generated with Claude Code" or similar AI attribution
 - Focus on WHAT changed and WHY
 - Be specific but concise
@@ -344,14 +349,14 @@ Based on this information, generate a commit message following the rules.""")
                 lines = commit_message.split('\n')
                 commit_message = '\n'.join(lines[1:-1])
 
-            # Remove <<MSG ... MSG>> wrapper if present (Windows-specific Gemini API artifact)
-            if commit_message.startswith('<<MSG'):
-                # Remove opening <<MSG and closing MSG or MSG>>
-                commit_message = commit_message[5:].strip()  # Remove <<MSG from start
-                if commit_message.endswith('MSG>>'):
-                    commit_message = commit_message[:-5].strip()
-                elif commit_message.endswith('MSG'):
-                    commit_message = commit_message[:-3].strip()
+            # Remove <<MSG ... MSG>>, <<COMMIT_MSG ... COM>>, etc. wrappers
+            # (Windows-specific Gemini API artifact)
+            # Remove opening markers like <<MSG, <<COMMIT_MSG, etc.
+            commit_message = re.sub(r'^<<[A-Z_]+\s*\n?', '', commit_message)
+            # Remove closing markers like MSG>>, COM>>, COMMIT_MSG, etc.
+            # Match optional whitespace, then uppercase/underscore word, optional >>, optional whitespace at end
+            commit_message = re.sub(r'\n?[A-Z_]+>>?\s*$', '', commit_message)
+            commit_message = commit_message.strip()
 
             print("\n📝 Generated commit message:")
             print("-" * 60)

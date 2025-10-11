@@ -1,6 +1,9 @@
 @echo off
 REM AI Commit Agent - Windows Installation Script
 
+REM Set console to UTF-8 for emoji support
+chcp 65001 >nul
+
 setlocal enabledelayedexpansion
 
 echo 🤖 Installing AI Commit Agent for Windows...
@@ -40,6 +43,9 @@ REM Create wrapper batch script
 echo @echo off> "%WRAPPER_SCRIPT%"
 echo REM AI Commit Agent Wrapper>> "%WRAPPER_SCRIPT%"
 echo REM Automatically loads GEMINI_API_KEY from config>> "%WRAPPER_SCRIPT%"
+echo.>> "%WRAPPER_SCRIPT%"
+echo REM Set console to UTF-8 for emoji support>> "%WRAPPER_SCRIPT%"
+echo chcp 65001 ^>nul>> "%WRAPPER_SCRIPT%"
 echo.>> "%WRAPPER_SCRIPT%"
 echo REM Load config if API key not in environment>> "%WRAPPER_SCRIPT%"
 echo if "%%GEMINI_API_KEY%%"=="" (>> "%WRAPPER_SCRIPT%"
