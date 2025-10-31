@@ -19,11 +19,11 @@ fi
 # Install Python dependencies
 echo "📦 Installing Python dependencies..."
 if [ -f "$SCRIPT_DIR/requirements.txt" ]; then
-    pip3 install -q -r "$SCRIPT_DIR/requirements.txt"
+    pip3 install --user --break-system-packages -q -r "$SCRIPT_DIR/requirements.txt"
     echo "✅ Dependencies installed"
 else
     echo "⚠️  requirements.txt not found, installing manually..."
-    pip3 install -q google-genai python-dotenv
+    pip3 install --user --break-system-packages -q google-genai python-dotenv
 fi
 
 # Make script executable
@@ -76,6 +76,18 @@ EOF
     echo "   Please edit it (\`aicommit config\`) and add your GEMINI_API_KEY"
 fi
 
+# Create default instruction.txt if it doesn't exist
+if [ ! -f "$CONFIG_DIR/instruction.txt" ]; then
+    if [ -f "$SCRIPT_DIR/instruction_template.txt" ]; then
+        cp "$SCRIPT_DIR/instruction_template.txt" "$CONFIG_DIR/instruction.txt"
+        echo "📝 Created instruction file: $CONFIG_DIR/instruction.txt"
+        echo "   You can customize it with \`aicommit config instruction\`"
+    else
+        echo "⚠️  Warning: instruction_template.txt not found in $SCRIPT_DIR"
+        echo "   Instruction file will be created on first use"
+    fi
+fi
+
 # Detect shell and update PATH if needed
 SHELL_NAME=$(basename "$SHELL")
 
@@ -120,9 +132,12 @@ echo "Next steps:"
 echo "1. Edit config file and add your GEMINI_API_KEY:"
 echo "   aicommit config"
 echo ""
-echo "2. Reload your shell:"
+echo "2. (Optional) Customize AI instructions:"
+echo "   aicommit config instruction"
+echo ""
+echo "3. Reload your shell:"
 echo "   source $SHELL_RC"
 echo ""
-echo "3. Use anywhere:"
+echo "4. Use anywhere:"
 echo "   aicommit              # In current directory"
 echo "   aicommit /path/to/repo  # In specific repository"

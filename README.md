@@ -20,6 +20,8 @@ https://github.com/user-attachments/assets/845ad9d9-42e9-42ac-a364-69cd411af4ca
 - ⚡ Auto-commit mode with `-y` flag
 - 💬 Add context with `-m` flag (supports any language)
 - ⚙️ Easy config management with `aicommit config`
+- 🎨 Customizable AI instructions via `aicommit config instruction`
+- 🏷️ Special status markers like `[NOT WORKING YET]`, `[TEMPORARY SOLUTION]`
 - 🎯 Smart: only calls AI if there are staged files
 - 🖥️ Cross-platform: Windows, macOS, Linux
 
@@ -112,6 +114,9 @@ aicommit C:\path\to\repo            # Windows
 
 # Open config in editor (vim on macOS/Linux, notepad on Windows)
 aicommit config
+
+# Customize AI instructions (optional)
+aicommit config instruction
 ```
 
 ## Commit Message Format
@@ -155,6 +160,24 @@ The agent follows this structure:
 - Remove duplicates
 ```
 
+### Special Status Markers
+
+When something is not working, temporary, or has special status, the AI adds markers:
+
+```
+✨ feat: initial Alembic migration setup
+
+- Add Alembic configuration files [NOT WORKING YET]
+- Add add_interests_column.sql script [TEMPORARY SOLUTION]
+- Update database schema with new column
+```
+
+Available markers:
+- `[NOT WORKING YET]` - for features that are added but not functional
+- `[TEMPORARY SOLUTION]` - for temporary workarounds
+- `[WIP]` - for work in progress
+- `[EXPERIMENTAL]` - for experimental features
+
 ## How It Works
 
 1. Checks if there are staged files (exits early if none)
@@ -164,6 +187,37 @@ The agent follows this structure:
 5. Generates commit message following the rules
 6. Shows preview and asks for confirmation (unless `-y` flag)
 7. Creates the commit
+
+## Customization
+
+### AI Instructions
+
+You can customize how the AI generates commit messages by editing the instruction file:
+
+```bash
+aicommit config instruction
+```
+
+This opens `~/.config/aicommit/instruction.txt` where you can:
+- Modify commit message format
+- Add/remove emoji types
+- Change the tone and style
+- Add custom rules for your team
+- Adjust special status markers
+
+The default instruction template is stored in `instruction_template.txt` in the repository.
+
+### Configuration File
+
+Edit API key and model:
+
+```bash
+aicommit config
+```
+
+This opens `~/.config/aicommit/config` where you can set:
+- `GEMINI_API_KEY` - Your Google Gemini API key
+- `GEMINI_MODEL` - Model to use (default: `gemini-2.5-pro`)
 
 ## Requirements
 

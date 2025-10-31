@@ -42,6 +42,26 @@ GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-pro")
 class GitCommitAgent:
     """Agent for creating structured git commits using Gemini AI"""
 
+    @staticmethod
+    def _get_default_instruction() -> str:
+        """
+        Load default instruction from template file
+
+        Returns:
+            Default instruction text
+        """
+        template_file = Path(__file__).parent / "instruction_template.txt"
+        if template_file.exists():
+            try:
+                return template_file.read_text(encoding='utf-8')
+            except Exception:
+                pass
+
+        # Fallback if template file doesn't exist
+        return """You are a Git commit message expert assistant.
+Your task is to analyze staged changes and create structured, meaningful commit messages.
+Follow conventional commits format with emojis."""
+
     def __init__(self, repo_path: str):
         """
         Initialize the Git Commit Agent
@@ -52,10 +72,29 @@ class GitCommitAgent:
         self.repo_path = Path(repo_path)
         self.client = genai.Client(api_key=GEMINI_API_KEY)
         self.model_name = GEMINI_MODEL
+        self.system_instruction = self._load_system_instruction()
 
         # Validate repository
         if not (self.repo_path / ".git").exists():
             raise ValueError(f"Not a git repository: {repo_path}")
+
+    def _load_system_instruction(self) -> str:
+        """
+        Load system instruction from config file or use default
+
+        Returns:
+            System instruction text
+        """
+        config_file = Path.home() / ".config" / "aicommit" / "instruction.txt"
+
+        if config_file.exists():
+            try:
+                return config_file.read_text(encoding='utf-8')
+            except Exception as e:
+                print(f"⚠️  Warning: Could not load instruction from {config_file}: {e}")
+                print("Using default instruction...")
+
+        return self._get_default_instruction()
 
     def has_staged_files(self) -> bool:
         """
@@ -236,73 +275,6 @@ class GitCommitAgent:
         if 'error' in status:
             return f"❌ Error getting git status: {status['error']}"
 
-        system_instruction = """You are a Git commit message expert assistant.
-
-Your task is to analyze staged changes and create structured, meaningful commit messages.
-
-## Commit Message Rules:
-
-### Format:
-- Use heredoc format for multiline messages
-- All messages MUST be in English
-- Follow conventional commits with emojis
-
-### Types with emojis:
-- ✨ feat: - New features
-- 🐛 fix: - Bug fixes
-- 📚 docs: - Documentation changes
-- 🎨 style: - Code style/formatting
-- ♻️ refactor: - Code refactoring
-- 🧪 test: - Tests
-- 🔧 chore: - Maintenance tasks
-- 🏗️ build: - Build system changes
-- ⚙️ ci: - CI/CD changes
-
-### Message Structure:
-```
-<emoji> <type>: <short description>
-
-- Detailed point 1
-- Detailed point 2
-- Detailed point 3
-```
-
-### Examples:
-```
-✨ feat: add MapConverter for URL conversion
-
-- Add Node.js project structure
-- Implement clipboard support for macOS
-```
-
-```
-🐛 fix: correct gitignore corrupted entries
-
-- Fix first line corruption
-- Add Node.js patterns
-- Remove duplicates
-```
-
-## Analysis Strategy:
-1. Review the diff carefully
-2. Identify the main purpose of changes
-3. List specific modifications
-4. Choose appropriate type and emoji
-5. Write clear, concise message
-6. If user provides context/description, use it to understand the intent better
-
-## CRITICAL OUTPUT FORMATTING:
-- Return ONLY the commit message text, nothing else
-- DO NOT wrap the message in any tags like <<MSG>>, <<COMMIT_MSG>>, or similar markers
-- DO NOT add any prefixes or suffixes to the message
-- The output should be ready to use directly as a git commit message
-- NEVER add "Generated with Claude Code" or similar AI attribution
-- Focus on WHAT changed and WHY
-- Be specific but concise
-- Use bullet points for details
-- If user provides context in their own language (e.g., Russian), understand it but write commit in ENGLISH
-"""
-
         # Get git information (status already checked above)
         diff = self.get_staged_diff()
         recent = self.get_recent_commits()
@@ -337,7 +309,7 @@ Based on this information, generate a commit message following the rules.""")
                 model=self.model_name,
                 contents=context,
                 config=types.GenerateContentConfig(
-                    system_instruction=system_instruction,
+                    system_instruction=self.system_instruction,
                     temperature=0.3,
                 )
             )
@@ -380,16 +352,31 @@ Based on this information, generate a commit message following the rules.""")
             return f"❌ Error generating commit message: {str(e)}"
 
 
-def open_config():
-    """Open config file in platform-specific editor"""
+def open_config(config_type: str = "config"):
+    """
+    Open config file in platform-specific editor
+
+    Args:
+        config_type: Type of config to open ('config' or 'instruction')
+    """
     import platform
 
-    config_file = Path.home() / ".config" / "aicommit" / "config"
+    config_dir = Path.home() / ".config" / "aicommit"
+    config_dir.mkdir(parents=True, exist_ok=True)
 
-    if not config_file.exists():
-        print("⚠️  Config file not found. Creating...")
-        config_file.parent.mkdir(parents=True, exist_ok=True)
-        config_file.write_text("""# AI Commit Agent Configuration
+    if config_type == "instruction":
+        config_file = config_dir / "instruction.txt"
+
+        if not config_file.exists():
+            print("⚠️  Instruction file not found. Creating with defaults...")
+            config_file.write_text(GitCommitAgent._get_default_instruction())
+            print(f"✅ Created default instruction at: {config_file}")
+    else:
+        config_file = config_dir / "config"
+
+        if not config_file.exists():
+            print("⚠️  Config file not found. Creating...")
+            config_file.write_text("""# AI Commit Agent Configuration
 # Get your API key from: https://makersuite.google.com/app/apikey
 GEMINI_API_KEY=your_api_key_here
 
@@ -397,6 +384,8 @@ GEMINI_API_KEY=your_api_key_here
 # Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-1.5-pro, gemini-1.5-flash
 GEMINI_MODEL=gemini-2.5-pro
 """)
+
+    print(f"📝 Opening {config_file}...")
 
     # Open in platform-specific editor
     if platform.system() == "Windows":
@@ -411,7 +400,13 @@ def main():
     """Main entry point"""
     # Handle 'config' subcommand
     if len(sys.argv) > 1 and sys.argv[1] == "config":
-        open_config()
+        # Check for second argument (instruction or default to config)
+        config_type = sys.argv[2] if len(sys.argv) > 2 else "config"
+        if config_type not in ["config", "instruction"]:
+            print(f"❌ Unknown config type: {config_type}")
+            print("Usage: aicommit config [instruction]")
+            sys.exit(1)
+        open_config(config_type)
         return
 
     # Parse arguments
