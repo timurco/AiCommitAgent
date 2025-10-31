@@ -75,12 +75,12 @@ if not exist "%CONFIG_FILE%" (
     echo # Get your API key from: https://makersuite.google.com/app/apikey>> "%CONFIG_FILE%"
     echo GEMINI_API_KEY=your_api_key_here>> "%CONFIG_FILE%"
     echo.>> "%CONFIG_FILE%"
-    echo # Gemini Model (optional, default: gemini-2.5-pro^)>> "%CONFIG_FILE%"
+    echo # Gemini Model (optional, default: gemini-2.5-pro)>> "%CONFIG_FILE%"
     echo # Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-1.5-pro, gemini-1.5-flash>> "%CONFIG_FILE%"
     echo GEMINI_MODEL=gemini-2.5-pro>> "%CONFIG_FILE%"
 
     echo 📝 Created config file: %CONFIG_FILE%
-    echo    Please edit it (aicommit config^) and add your GEMINI_API_KEY
+    echo    Please edit it (aicommit config) and add your GEMINI_API_KEY
 )
 
 REM Check if directory is already in PATH
@@ -101,7 +101,7 @@ if !errorlevel! equ 0 (
     echo 6. Click OK on all dialogs
     echo.
     echo Or run this PowerShell command as administrator:
-    echo [Environment]::SetEnvironmentVariable("Path", $env:Path + ";%INSTALL_DIR%", "User"^)
+    echo [Environment]::SetEnvironmentVariable("Path", $env:Path + ";%INSTALL_DIR%", "User")
 )
 
 echo.
@@ -114,9 +114,12 @@ echo Next steps:
 echo 1. Edit config file and add your GEMINI_API_KEY:
 echo    aicommit config
 echo.
-echo 2. Add %INSTALL_DIR% to your PATH (see instructions above^)
+echo 2. (Optional) Customize AI instructions:
+echo    aicommit config instruction
 echo.
-echo 3. Restart your terminal and use anywhere:
+echo 3. Add %INSTALL_DIR% to your PATH (see instructions above)
+echo.
+echo 4. Restart your terminal and use anywhere:
 echo    aicommit                # In current directory
 echo    aicommit C:\path\to\repo  # In specific repository
 echo    aicommit -y             # Auto-commit mode

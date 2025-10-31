@@ -54,10 +54,11 @@ class GitCommitAgent:
         if template_file.exists():
             try:
                 return template_file.read_text(encoding='utf-8')
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"⚠️  Warning: Could not read instruction template: {e}")
 
         # Fallback if template file doesn't exist
+        print(f"⚠️  Warning: Template file not found at {template_file}")
         return """You are a Git commit message expert assistant.
 Your task is to analyze staged changes and create structured, meaningful commit messages.
 Follow conventional commits format with emojis."""
@@ -367,10 +368,13 @@ def open_config(config_type: str = "config"):
     if config_type == "instruction":
         config_file = config_dir / "instruction.txt"
 
-        if not config_file.exists():
-            print("⚠️  Instruction file not found. Creating with defaults...")
-            config_file.write_text(GitCommitAgent._get_default_instruction())
+        # Create file if it doesn't exist or is empty
+        if not config_file.exists() or config_file.stat().st_size == 0:
+            print("⚠️  Instruction file not found or empty. Creating with defaults...")
+            instruction_content = GitCommitAgent._get_default_instruction()
+            config_file.write_text(instruction_content, encoding='utf-8')
             print(f"✅ Created default instruction at: {config_file}")
+            print(f"   Content size: {len(instruction_content)} characters")
     else:
         config_file = config_dir / "config"
 
@@ -383,7 +387,7 @@ GEMINI_API_KEY=your_api_key_here
 # Gemini Model (optional, default: gemini-2.5-pro)
 # Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-1.5-pro, gemini-1.5-flash
 GEMINI_MODEL=gemini-2.5-pro
-""")
+""", encoding='utf-8')
 
     print(f"📝 Opening {config_file}...")
 
